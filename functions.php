@@ -4,8 +4,8 @@ session_start();
 
 // Database connection configuration
 $host = 'localhost'; // Update as needed
-$username = 'your_username'; // Replace with your MySQL username
-$password = 'your_password'; // Replace with your MySQL password
+$username = 'root'; // Replace with your MySQL username
+$password = 'bendythe'; // Replace with your MySQL password
 $dbname = 'dct_ccs'; // Database name
 
 // Create a connection
