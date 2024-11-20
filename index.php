@@ -2,28 +2,36 @@
 session_start();
 
 // Database connection
-$servername = "localhost"; 
-$username = "root";        
-$password = "bendythe";           
-$dbname = "dct-ccs"; 
+$servername = "localhost";
+$username = "root";
+$password = "bendythe";
+$dbname = "dct-ccs";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'];  // Changed 'username' to 'email' to match the form field name
-    $password = $_POST['password'];  // Correct password field name
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
 
     // Prepare the SQL statement
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND password = ?");
-    $stmt->bind_param("ss", $email, $password);
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        $_SESSION['email'] = $email;  // Store email in session (not username)
-        header("Location: dashboard.php");
-        exit();
+        $user = $result->fetch_assoc();
+
+        // Verify password
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['email'] = $email;
+            header("Location: /finals-calvin/admin/dashboard.php");
+            exit();
+        } else {
+            $error_message = "Invalid email or password";
+        }
     } else {
-        $error_message = "Invalid email or password";  // More specific error message
+        $error_message = "Invalid email or password";
     }
+    $stmt->close();
 }
 ?>
 
@@ -43,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <?php if (isset($error_message)): ?>
                     <div class="alert alert-danger" role="alert">
-                        <?php echo $error_message; ?>
+                        <?php echo htmlspecialchars($error_message); ?>
                     </div>
                 <?php endif; ?>
 
