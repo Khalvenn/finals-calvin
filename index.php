@@ -1,37 +1,22 @@
 <?php
 session_start();
 
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "bendythe";
-$dbname = "dct-ccs";
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    // Prepare the SQL statement
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Hardcoded login credentials
+    $hardcoded_email = "admin@gmail.com";
+    $hardcoded_password = "catcat123";
 
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-
-        // Verify password
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['email'] = $email;
-            header("Location: /finals-calvin/admin/dashboard.php");
-            exit();
-        } else {
-            $error_message = "Invalid email or password";
-        }
+    // Check against hardcoded credentials
+    if ($email === $hardcoded_email && $password === $hardcoded_password) {
+        $_SESSION['email'] = $email;
+        header("Location: /finals-calvin/admin/dashboard.php");
+        exit();
     } else {
-        $error_message = "Invalid email or password";
+        $error_message = "Invalid email or password.";
     }
-    $stmt->close();
 }
 ?>
 

@@ -2,6 +2,51 @@
 // Start session handling
 session_start();
 
+// Database connection
+function dbConnect() {
+    $host = 'localhost';
+    $dbname = 'student_management';
+    $username = 'root';
+    $password = '';
+    try {
+        return new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    } catch (PDOException $e) {
+        die("Connection failed: " . $e->getMessage());
+    }
+}
+
+// Get the total number of subjects
+function getTotalSubjects() {
+    $db = dbConnect();
+    $stmt = $db->query("SELECT COUNT(*) as count FROM subjects");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['count'] ?? 0;
+}
+
+// Get the total number of students
+function getTotalStudents() {
+    $db = dbConnect();
+    $stmt = $db->query("SELECT COUNT(*) as count FROM students");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['count'] ?? 0;
+}
+
+// Get the total number of passed students
+function getPassedStudents() {
+    $db = dbConnect();
+    $stmt = $db->query("SELECT COUNT(*) as count FROM students WHERE grade >= 75");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['count'] ?? 0;
+}
+
+// Get the total number of failed students
+function getFailedStudents() {
+    $db = dbConnect();
+    $stmt = $db->query("SELECT COUNT(*) as count FROM students WHERE grade < 75");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['count'] ?? 0;
+}
+
 // Database connection configuration
 $host = 'localhost'; // Update as needed
 $username = 'root'; // Replace with your MySQL username
