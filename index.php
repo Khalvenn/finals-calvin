@@ -1,16 +1,13 @@
 <?php
-session_start();
+require_once 'functions.php'; // Link to functions.php for database and login functions
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    // Hardcoded login credentials
-    $hardcoded_email = "admin@gmail.com";
-    $hardcoded_password = "catcat123";
-
-    // Check against hardcoded credentials
-    if ($email === $hardcoded_email && $password === $hardcoded_password) {
+    // Attempt to log in using the function from functions.php
+    if (loginUser(dbConnect(), $email, $password)) {
+        // Set session variable and redirect
         $_SESSION['email'] = $email;
         header("Location: /finals-calvin/admin/dashboard.php");
         exit();
@@ -19,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

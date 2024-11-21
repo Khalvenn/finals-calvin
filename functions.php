@@ -4,14 +4,18 @@ session_start();
 
 // Database connection
 function dbConnect() {
-    $host = 'localhost';
-    $dbname = 'student_management';
-    $username = 'root';
-    $password = '';
+    $host = 'localhost';      // Server host
+    $dbname = 'dct_ccs';      // Corrected database name
+    $username = 'root';       // MySQL username
+    $password = 'bendythe';   // MySQL password
+
     try {
-        return new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+        // Create PDO instance
+        $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // Enable error mode
+        return $pdo;
     } catch (PDOException $e) {
-        die("Connection failed: " . $e->getMessage());
+        die("Database connection failed: " . $e->getMessage());
     }
 }
 
@@ -34,7 +38,11 @@ function getTotalStudents() {
 // Get the total number of passed students
 function getPassedStudents() {
     $db = dbConnect();
-    $stmt = $db->query("SELECT COUNT(*) as count FROM students WHERE grade >= 75");
+    $stmt = $db->query("
+        SELECT COUNT(*) as count 
+        FROM students_subjects 
+        WHERE grade >= 75
+    ");
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['count'] ?? 0;
 }
@@ -42,33 +50,23 @@ function getPassedStudents() {
 // Get the total number of failed students
 function getFailedStudents() {
     $db = dbConnect();
-    $stmt = $db->query("SELECT COUNT(*) as count FROM students WHERE grade < 75");
+    $stmt = $db->query("
+        SELECT COUNT(*) as count 
+        FROM students_subjects 
+        WHERE grade < 75
+    ");
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['count'] ?? 0;
 }
 
-// Database connection configuration
-$host = 'localhost'; // Update as needed
-$username = 'root'; // Replace with your MySQL username
-$password = 'bendythe'; // Replace with your MySQL password
-$dbname = 'dct_ccs'; // Database name
-
-// Create a connection
-$conn = new mysqli($host, $username, $password, $dbname);
-
-// Check the connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
 // Function for user registration
-function registerUser($conn, $username, $password) {
+function registerUser($conn, $email, $password, $name) {
     // Hash the password using md5()
     $hashedPassword = md5($password);
 
-    $sql = "INSERT INTO users (username, password) VALUES (?, ?)";
+    $sql = "INSERT INTO users (email, password, name) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $username, $hashedPassword);
+    $stmt->bind_param("sss", $email, $hashedPassword, $name);
 
     if ($stmt->execute()) {
         echo "Registration successful.";
@@ -80,23 +78,43 @@ function registerUser($conn, $username, $password) {
 }
 
 // Function for user login
-function loginUser($conn, $username, $password) {
-    // Hash the password using md5()
+function loginUser($conn, $email, $password) {
+    // Hash the password for comparison
     $hashedPassword = md5($password);
 
-    $sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+    // Hardcoded admin credentials
+    $adminEmail = "admin@gmail.com";
+    $adminPasswordHash = md5("catcat123");
+
+    // Check if the user is the admin
+    if ($email === $adminEmail) {
+        if ($hashedPassword === $adminPasswordHash) {
+            $_SESSION['email'] = $email;
+            $_SESSION['role'] = 'admin'; // Optional: Assign admin role
+            echo "Admin login successful. Welcome, Admin!";
+            return true;
+        } else {
+            echo "Invalid password for admin account.";
+            return false;
+        }
+    }
+
+    // For non-admin users, check the database
+    $sql = "SELECT * FROM users WHERE email = ? AND password = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $username, $hashedPassword);
+    $stmt->bind_param("ss", $email, $hashedPassword);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        $_SESSION['username'] = $username;
-        echo "Login successful. Welcome, $username!";
+        $_SESSION['email'] = $email;
+        $user = $result->fetch_assoc();
+        $_SESSION['name'] = $user['name']; // Store the user's name for use
+        echo "Login successful. Welcome, {$user['name']}!";
+        return true;
     } else {
-        echo "Invalid username or password.";
+        echo "Invalid email or password.";
+        return false;
     }
-
-    $stmt->close();
 }
 ?>
